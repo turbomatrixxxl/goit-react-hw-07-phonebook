@@ -28,6 +28,7 @@ Input.propTypes = {
   title: PropTypes.string,
   required: PropTypes.bool,
   handleChange: PropTypes.func,
+  pattern: PropTypes.string,
 };
 
 export default Input;

@@ -13,6 +13,11 @@ function Form({ handleSubmit, children }) {
 
 Form.propTypes = {
   handleSubmit: PropTypes.func,
+  children: PropTypes.oneOfType([
+    PropTypes.element,
+    PropTypes.array,
+    PropTypes.string,
+  ]),
 };
 
 export default Form;

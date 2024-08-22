@@ -22,6 +22,7 @@ Button.propTypes = {
   disabled: PropTypes.bool,
   variant: PropTypes.bool,
   handleClick: PropTypes.func,
+  children: PropTypes.string,
 };
 
 export default Button;

@@ -1,3 +1,5 @@
+import React from 'react';
+
 import ContactBook from './ContactBook';
 
 export const App = () => {
