@@ -5,15 +5,20 @@ import Form from 'components/form';
 import Input from 'components/common/input';
 import Button from 'components/common/button';
 
-import styles from './ContactBook.module.css';
 import { useDispatch, useSelector } from 'react-redux';
+import { addContact, deleteContact } from '../../redux/operations';
 import {
-  addContact,
-  deleteContact,
-  filterContact,
-} from '../../redux/contacts/contactsSlice';
-import { getContacts, getFilter } from '../../redux/contacts/selectors';
+  selectContacts,
+  selectFilter,
+  selectLoading,
+  selectError,
+} from '../../redux/contacts/selectors';
 import { useDebounce } from '@uidotdev/usehooks';
+import { filterContact } from '../../redux/contacts/contactsSlice';
+
+import styles from './ContactBook.module.css';
+import Loading from 'components/common/Loading';
+import Alert from 'components/common/Alert';
 
 export default function ContactBook() {
   const [newContact, setNewContact] = useState({
@@ -24,40 +29,17 @@ export default function ContactBook() {
   const [searchTherm, setSearchTherm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTherm, 1000);
 
-  const initialContacts = useSelector(getContacts);
+  const initialContacts = useSelector(selectContacts);
   // console.log(initialContacts);
   // console.log(initialContacts.includes(null) === false);
 
-  const filter = useSelector(getFilter);
+  const filterSliceStore = useSelector(selectFilter);
   // console.log(filter);
 
+  const isLoading = useSelector(selectLoading);
+  const isError = useSelector(selectError);
+
   const dispatch = useDispatch();
-
-  // localStorage.clear();
-
-  useEffect(() => {
-    async function fetchContacts() {
-      try {
-        if (
-          initialContacts === null ||
-          initialContacts.length === 0 ||
-          initialContacts.includes(null)
-        ) {
-          alert('Nu aveti contacte salvate in lista !');
-          return;
-        }
-      } catch (error) {
-        alert('Nu aveti contacte salvate in lista !');
-        // console.log(error.message);
-      }
-    }
-
-    fetchContacts();
-  }, [initialContacts]);
-
-  useEffect(() => {
-    localStorage.setItem('contacts', JSON.stringify(initialContacts));
-  }, [initialContacts]);
 
   useEffect(() => {
     dispatch(filterContact(debouncedSearchTerm));
@@ -93,12 +75,14 @@ export default function ContactBook() {
     }
 
     const isExist = initialContacts.find(contact => {
-      // console.log(contact.name === value);
+      // console.log(contact.name);
+
+      console.log(contact.name.toLowerCase() === value.toLowerCase());
       return contact.name === value;
     });
 
     if (isExist) {
-      // console.log('true');
+      console.log('trueee');
 
       alert(`${value} este deja in contacte.`);
       setNewContact({ ...newContact, [name]: '' });
@@ -138,7 +122,9 @@ export default function ContactBook() {
     getContactsByName = initialContacts.filter(contact => {
       // console.log(contact);
 
-      const isFound = contact.name.toLowerCase().includes(filter.toLowerCase());
+      const isFound = contact.name
+        .toLowerCase()
+        .includes(filterSliceStore.toLowerCase());
       return isFound;
     });
   }
@@ -189,6 +175,8 @@ export default function ContactBook() {
           Contacts found: {getContactsByName.length}
         </p>
       </div>
+      {isLoading && <Loading />}
+      {isError && <Alert message={isError} />}
       {initialContacts.includes(null) === false && (
         <ul className={styles.contactList}>
           {getContactsByName.map(contact => {

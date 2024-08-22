@@ -1,51 +1,26 @@
-import { createSlice, nanoid } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 
-const localstorageContacts = localStorage.getItem('contacts');
-const localContacts = JSON.parse(localstorageContacts);
-// console.log(localContacts);
+import { fetchContacts, addContact, deleteContact } from '../operations';
 
-let initialState = {
-  contacts: localContacts,
-  filter: '',
+const handlePending = state => {
+  state.contacts.isLoading = true;
+  state.contacts.error = null;
 };
 
-if (initialState.contacts === null) {
-  initialState = {
-    contacts: [],
-    filter: '',
-  };
-}
+const handleRejected = (state, action) => {
+  state.contacts.isLoading = false;
+  state.contacts.error = action.payload;
+};
+
+const initialState = {
+  contacts: { items: [], isLoading: false, error: null },
+  filter: '',
+};
 
 const contactsSlice = createSlice({
   name: 'contacts',
   initialState: initialState,
   reducers: {
-    addContact: {
-      reducer(state, action) {
-        state.contacts.push(action.payload);
-      },
-      prepare(contact) {
-        return {
-          payload: {
-            id: nanoid(),
-            ...contact,
-          },
-        };
-      },
-    },
-    deleteContact: {
-      reducer(state, action) {
-        const index = state.contacts.findIndex(
-          contact => contact.id === action.payload.id
-        );
-        state.contacts.splice(index, 1);
-      },
-      prepare(contactId) {
-        return {
-          payload: { id: contactId },
-        };
-      },
-    },
     filterContact: {
       reducer(state, action) {
         state.filter = action.payload.searchtherm;
@@ -57,9 +32,43 @@ const contactsSlice = createSlice({
       },
     },
   },
+  extraReducers: builder => {
+    builder
+      .addCase(fetchContacts.pending, handlePending)
+      .addCase(fetchContacts.fulfilled, (state, action) => {
+        // console.log(action.payload);
+        // console.log(state.contacts.items);
+
+        state.contacts.isLoading = false;
+        state.contacts.error = null;
+        state.contacts.items = action.payload;
+      })
+      .addCase(fetchContacts.rejected, handleRejected)
+
+      .addCase(addContact.pending, handlePending)
+      .addCase(addContact.fulfilled, (state, action) => {
+        state.contacts.isLoading = false;
+        state.contacts.error = null;
+        state.contacts.items.push(action.payload);
+      })
+      .addCase(addContact.rejected, handleRejected)
+
+      .addCase(deleteContact.pending, handlePending)
+      .addCase(deleteContact.fulfilled, (state, action) => {
+        console.log(action.payload);
+
+        state.contacts.isLoading = false;
+        state.contacts.error = null;
+        const index = state.contacts.items.findIndex(
+          contact => contact.id === action.payload.id
+        );
+
+        state.contacts.items.splice(index, 1);
+      })
+      .addCase(deleteContact.rejected, handleRejected);
+  },
 });
 
 // Exportăm generatoarelor de acțiuni și reducer-ul
-export const { addContact, deleteContact, filterContact } =
-  contactsSlice.actions;
+export const { filterContact } = contactsSlice.actions;
 export const contactsReducer = contactsSlice.reducer;
